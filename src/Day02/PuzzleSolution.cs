@@ -10,65 +10,105 @@ namespace AdventOfCode.Day02
 			int totalScore = 0;
 			foreach (string value in await _puzzleInput)
 			{
-				totalScore += GetRockPaperScissorsOutcome(value.First(), value.Last());
-				totalScore += You.SelectionScore(value.Last());
+				RockPaperScissorsRound round = new(value);
+				totalScore += (int)round.RoundResult;
+				totalScore += (int)round.PlayerTwo;
 			}
 			System.Console.WriteLine($"Total score is: {totalScore}");
 
 			totalScore.Should().Be(13009);
 		}
 
-		private int GetRockPaperScissorsOutcome(char opponent, char you)
+		[Fact]
+		public async Task RockPaperScissorsPartTwo()
 		{
-			const int LOSS = 0;
-			const int DRAW = 3;
-			const int WIN = 6;
-
-			if (IsDraw(opponent, you)) return DRAW;
-
-			return opponent switch
+			int totalScore = 0;
+			foreach (string value in await _puzzleInput)
 			{
-				Opponent.Rock => you == You.Paper ? WIN : LOSS,
-				Opponent.Paper => you == You.Scissors ? WIN : LOSS,
-				Opponent.Scissors => you == You.Rock ? WIN: LOSS,
-				_ => throw new System.ArgumentOutOfRangeException()
-			};
+				RockPaperScissorsRound round = new(value);
+				totalScore += (int)round.DesiredRoundResult;
+				totalScore += (int)round.DesiredPlayerTwo;
+			}
+			System.Console.WriteLine($"Total score is: {totalScore}");
+
+			totalScore.Should().Be(10398);
 		}
 
-		private bool IsDraw(char opponent, char you)
+		private class RockPaperScissorsRound
 		{
-			return opponent switch
+			public string Round { get; private set; }
+			public RockPaperScissors PlayerOne => GetPlayersHand(Round.First());
+			public RockPaperScissors PlayerTwo => GetPlayersHand(Round.Last());
+			public RockPaperScissorsResult RoundResult => GetResult();
+			public RockPaperScissors DesiredPlayerTwo => GetDesiredHandForPlayerTwo(GetResult(Round.Last()));
+			public RockPaperScissorsResult DesiredRoundResult => GetResult(Round.Last());
+
+			public RockPaperScissorsRound(string round)
 			{
-				Opponent.Rock => you == You.Rock,
-				Opponent.Paper => you == You.Paper,
-				Opponent.Scissors => you == You.Scissors,
-				_ => throw new System.ArgumentOutOfRangeException()
-			};
-		}
+				Round = round;
+			}
 
-		private static class Opponent
-		{
-			public const char Rock = 'A';
-			public const char Paper = 'B';
-			public const char Scissors = 'C';
-		}
-
-		private static class You
-		{
-			public const char Rock = 'X';
-			public const char Paper = 'Y';
-			public const char Scissors = 'Z';
-
-			public static int SelectionScore(char you)
+			private RockPaperScissors GetPlayersHand(char player)
 			{
-				return you switch
+				return player switch
 				{
-					Rock => 1,
-					Paper => 2,
-					Scissors => 3,
+					'A' or 'X' => RockPaperScissors.Rock,
+					'B' or 'Y' => RockPaperScissors.Paper,
+					'C' or 'Z' => RockPaperScissors.Scissors,
 					_ => throw new System.ArgumentOutOfRangeException()
 				};
 			}
+
+			private RockPaperScissorsResult GetResult()
+			{
+				if (PlayerOne == PlayerTwo) return RockPaperScissorsResult.Draw;
+
+				return PlayerOne switch
+				{
+					RockPaperScissors.Rock => PlayerTwo == RockPaperScissors.Paper ? RockPaperScissorsResult.Win : RockPaperScissorsResult.Loss,
+					RockPaperScissors.Paper => PlayerTwo == RockPaperScissors.Scissors ? RockPaperScissorsResult.Win : RockPaperScissorsResult.Loss,
+					RockPaperScissors.Scissors => PlayerTwo == RockPaperScissors.Rock ? RockPaperScissorsResult.Win : RockPaperScissorsResult.Loss,
+					_ => throw new System.ArgumentOutOfRangeException()
+				};
+			}
+
+			private RockPaperScissorsResult GetResult(char desiredOutcome)
+			{
+				return desiredOutcome switch
+				{
+					'X' => RockPaperScissorsResult.Loss,
+					'Y' => RockPaperScissorsResult.Draw,
+					'Z' => RockPaperScissorsResult.Win,
+					_ => throw new System.ArgumentOutOfRangeException()
+				};
+			}
+
+			private RockPaperScissors GetDesiredHandForPlayerTwo(RockPaperScissorsResult desiredOutcome)
+			{
+				if (desiredOutcome == RockPaperScissorsResult.Draw) return PlayerOne;
+
+				return PlayerOne switch
+				{
+					RockPaperScissors.Rock => desiredOutcome == RockPaperScissorsResult.Win ? RockPaperScissors.Paper : RockPaperScissors.Scissors, 
+					RockPaperScissors.Paper => desiredOutcome == RockPaperScissorsResult.Win ? RockPaperScissors.Scissors : RockPaperScissors.Rock,
+					RockPaperScissors.Scissors => desiredOutcome == RockPaperScissorsResult.Win ? RockPaperScissors.Rock : RockPaperScissors.Paper,
+					_ => throw new System.ArgumentOutOfRangeException()
+				};
+			}
+		}
+
+		private enum RockPaperScissors
+		{
+			Rock = 1,
+			Paper = 2,
+			Scissors = 3
+		}
+
+		private enum RockPaperScissorsResult
+		{
+			Loss = 0,
+			Draw = 3,
+			Win = 6
 		}
 	}
 }
