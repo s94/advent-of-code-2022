@@ -1,6 +1,3 @@
-using AdventOfCode.Utilites;
-using FluentAssertions;
-
 namespace AdventOfCode.Day01
 {
 	public sealed class PuzzleSolution
